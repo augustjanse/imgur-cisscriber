@@ -25,7 +25,7 @@ def main():
 		line = config.readline()
 
 
-	r = praw.Reddit(user_agent='Imgur Cisscriber 0.2 by /u/Tularion')
+	r = praw.Reddit(user_agent='Imgur Cisscriber 0.3 by /u/Tularion')
 	r.login(reddit_login, reddit_password)
 	
 	try:
@@ -35,7 +35,7 @@ def main():
 		print(e.status_code)
 		exit()
 
-	user = r.get_redditor('bottester151515')
+	user = r.get_redditor('imgurtranscriber')
 	comments = user.get_comments(sort='new', time='month')
 	
 	for comment in comments:
