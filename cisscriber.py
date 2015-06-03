@@ -3,6 +3,7 @@
 import praw
 import re
 import imgurpython
+import time
 
 def main():
 	"""Parses posts from /u/imgurtranscriber and posts if successful a regenerated picture as a reply to each."""
@@ -25,7 +26,7 @@ def main():
 		line = config.readline()
 
 
-	r = praw.Reddit(user_agent='Imgur Cisscriber 0.3 by /u/Tularion')
+	r = praw.Reddit(user_agent='Imgur Cisscriber 0.4 by /u/Tularion')
 	r.login(reddit_login, reddit_password)
 	
 	try:
@@ -54,7 +55,7 @@ def main():
 			url = upload_meme(generate_meme(meme_type, post_title, top, bottom), client)
 		
 			if url is not None:
-				comment.reply("Here is what the transcribed meme looks like in case you can't read:\n\n[New Link^1](" + url + ")")
+				patient_reply(comment, "Here is what the transcribed meme looks like in case you can't read:\n\n[New Link^1](" + url + ")")
 				replied = open('.replied', 'a')
 				replied.write(comment.id + '\n')
 				replied.close()
@@ -100,5 +101,14 @@ def already_replied(comment):
 	
 	replied.close()
 	return False
+	
+def patient_reply(comment, body):
+    while True:
+        try:
+            comment.reply(body)
+            break
+        except reddit.errors.RateLimitExceeded as e:
+            print('Rate limit exceeded, sleeping for %d seconds' % e.sleep_time)
+            time.sleep(error.sleep_time)
 
 main()
