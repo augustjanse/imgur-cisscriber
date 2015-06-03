@@ -103,6 +103,7 @@ def already_replied(comment):
 	return False
 	
 def patient_reply(comment, body):
+	"""Tries to reply to comment with body and waits if the rate limit is exceeded"""
     while True:
         try:
             comment.reply(body)
