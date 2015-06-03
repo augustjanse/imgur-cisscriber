@@ -45,11 +45,15 @@ def main():
 			post_title = re.search('Title:\*\*\*  \*(.*)\*\s*', comment.body).group(1)
 		
 			search = re.search('Top:\*\*\*  \*(.*)\*\s*', comment.body)
-			if search is not None:
+			if search is None:
+				top = ''
+			else:
 				top = search.group(1)
 		
 			search = re.search('Bottom:\*\*\*  \*(.*)\*\s*', comment.body)
-			if search is not None:
+			if search is None:
+				bottom = ''
+			else:
 				bottom = search.group(1)
 		
 			url = upload_meme(generate_meme(meme_type, post_title, top, bottom), client)
