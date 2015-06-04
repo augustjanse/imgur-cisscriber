@@ -98,7 +98,14 @@ def generate_meme(generator, meme_type, post_title, top, bottom):
 					"text1": bottom
 					}
 		
-		return requests.post(url, data=payload).json()['data']['url']
+		r = requests.post(url, data=payload).json()
+		
+		if r['success']:
+			return r['data']['url']
+		else:
+			return None
+		
+		
 
 def upload_meme(url):
 	"""Uploads an image anonymously to Imgur and returns a direct link. Returns None if upload failed."""
