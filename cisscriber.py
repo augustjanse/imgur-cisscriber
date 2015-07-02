@@ -34,7 +34,7 @@ def main():
 		
 		line = config.readline()
 
-	r = praw.Reddit(user_agent='Imgur Cisscriber 0.4 by /u/Tularion')
+	r = praw.Reddit(user_agent='Imgur Cisscriber 0.5 by /u/Tularion')
 	r.login(reddit_login, reddit_password)
 	
 	try:
@@ -93,16 +93,19 @@ def generate_meme(generator, meme_type, imgur_id, top, bottom):
 		return r'http://apimeme.com/meme?meme=' + meme_type.replace(" ", "+") + r'&top=' + top + r'&bottom=' + bottom
 	elif generator == 'Imgflip':
 		url = r'https://api.imgflip.com/caption_image'
-		payload = {	"template_id": "61527", # needs to be solved
+		payload = {	"template_id": get_imgflip_id(meme_type),
 					"username": imgflip_username,
 					"password": imgflip_password,
 					"text0": top,
 					"text1": bottom
 					}
 		
-		return requests.post(url, data=payload).json()['data']['url']
-	
-	
+		r = requests.post(url, data=payload).json()
+		
+		if r['success']:
+			return r['data']['url']
+		else:
+			return None
 		
 		
 
@@ -141,5 +144,19 @@ def patient_reply(comment, body):
 		except reddit.errors.RateLimitExceeded as e:
 			print('Rate limit exceeded, sleeping for %d seconds' % e.sleep_time)
 			time.sleep(error.sleep_time)
+			
+def get_imgflip_id(meme_type):
+	"""For a given meme type, tries to grab the corresponding Imgflip ID from a text file."""
+	id_file = open('.imgflip_ids', 'r')
+	
+	line = id_file.readline()
+	while (len(line) > 0):
+		if meme_type in line:
+			id_file.close()
+			return re.search('\d*', line).group(0)
+		
+		line = id_file.readline()
+		
+	return -1
 
 main()
