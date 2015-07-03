@@ -6,6 +6,8 @@ import imgurpython
 import time
 import requests
 
+from lxml import etree
+
 def main():
 	"""Parses posts from /u/imgurtranscriber and posts if successful a regenerated picture as a reply to each."""
 
@@ -146,17 +148,17 @@ def patient_reply(comment, body):
 			time.sleep(error.sleep_time)
 			
 def get_imgflip_id(meme_type):
-	"""For a given meme type, tries to grab the corresponding Imgflip ID from a text file."""
-	id_file = open('.imgflip_ids', 'r')
+	"""For a given meme type, tries to grab the corresponding Imgflip ID from an XML file."""
+	tree = etree.parse('memes.xml')
+	root = tree.getroot()
 	
-	line = id_file.readline()
-	while (len(line) > 0):
-		if meme_type in line:
-			id_file.close()
-			return re.search('\d*', line).group(0)
-		
-		line = id_file.readline()
-		
+	for elem in root.xpath('//name'):
+		if meme_type in elem.text:
+			try:
+				return elem.xpath('../imgflipID')[0].text
+			except IndexError:
+				break
+	
 	return -1
 
 main()
