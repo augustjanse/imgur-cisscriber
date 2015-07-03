@@ -5,8 +5,10 @@ import re
 import imgurpython
 import time
 import requests
+import os
 
 from lxml import etree
+from subprocess import call
 
 def main():
 	"""Parses posts from /u/imgurtranscriber and posts if successful a regenerated picture as a reply to each."""
@@ -68,8 +70,11 @@ def main():
 				bottom = search.group(1)
 				
 			imgur_id = re.search('http://imgur.com/([\w\d]*)', comment.body).group(1)
-		
-			url = upload_meme(generate_meme(generator, meme_type, imgur_id, top, bottom))
+			
+			if generator is 'Meme Captain':
+				url = upload_from_path(generate_meme(generator, meme_type, imgur_id, top, bottom))
+			else:
+				url = upload_from_url(generate_meme(generator, meme_type, imgur_id, top, bottom))
 		
 			if url is not None:
 				patient_reply(comment, "Here is what the transcribed meme looks like in case you can't read:\n\n[New Link^1](" + url + ")")
@@ -95,7 +100,7 @@ def generate_meme(generator, meme_type, imgur_id, top, bottom):
 		return r'http://apimeme.com/meme?meme=' + meme_type.replace(" ", "+") + r'&top=' + top + r'&bottom=' + bottom
 	elif generator == 'Imgflip':
 		url = r'https://api.imgflip.com/caption_image'
-		payload = {	"template_id": get_imgflip_id(meme_type),
+		payload = {	"template_id": get_meme_data(meme_type, 'imgflipID'),
 					"username": imgflip_username,
 					"password": imgflip_password,
 					"text0": top,
@@ -108,10 +113,30 @@ def generate_meme(generator, meme_type, imgur_id, top, bottom):
 			return r['data']['url']
 		else:
 			return None
+	elif generator == 'Meme Captain':
+		template = get_meme_data(meme_type, 'template')
+		if template is -1:
+			return None
 		
+		path = 'templates/' + get_meme_data(meme_type, 'template')
+		call(['ruby', 'captain.rb', path, top, bottom])
+		if os.path.isfile('out.jpg'):
+			return 'out.jpg'
+		else:
+			return None
 		
+def upload_from_path(path):
+	"""Uploads an image anonymously to Imgur and returns a direct link. Returns None if upload failed."""
+	
+	try:
+		upload = client.upload_from_path(path)
+	except TypeError:
+		print('Meme generation failed.')
+		return None
+	else:
+		return upload['link']
 
-def upload_meme(url):
+def upload_from_url(url):
 	"""Uploads an image anonymously to Imgur and returns a direct link. Returns None if upload failed."""
 	
 	try:
@@ -146,16 +171,16 @@ def patient_reply(comment, body):
 		except reddit.errors.RateLimitExceeded as e:
 			print('Rate limit exceeded, sleeping for %d seconds' % e.sleep_time)
 			time.sleep(error.sleep_time)
-			
-def get_imgflip_id(meme_type):
-	"""For a given meme type, tries to grab the corresponding Imgflip ID from an XML file."""
+
+def get_meme_data(meme_type, data_type):
+	"""For a given meme type, tries to grab the indicated data from its XML node."""
 	tree = etree.parse('memes.xml')
 	root = tree.getroot()
 	
 	for elem in root.xpath('//name'):
 		if meme_type in elem.text:
 			try:
-				return elem.xpath('../imgflipID')[0].text
+				return elem.xpath('../' + data_type)[0].text
 			except IndexError:
 				break
 	
