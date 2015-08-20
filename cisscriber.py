@@ -12,8 +12,10 @@ from subprocess import call
 
 def main():
 	"""Parses posts from /u/imgurtranscriber and posts if successful a regenerated picture as a reply to each."""
-
-	config = open('.config', 'r')
+	
+	dir_path = os.path.dirname(__file__)
+	file_path = os.path.join(dir_path, '.config')
+	config = open(file_path, 'r')
 
 	line = config.readline()
 	while (len(line) > 0):
@@ -80,7 +82,9 @@ def main():
 				comment_text = "Here is what the transcribed meme looks like in case you can't read:\n\n" + concat_links
 				
 				patient_reply(comment, comment_text)
-				replied = open('.replied', 'a')
+				dir_path = os.path.dirname(__file__)
+				file_path = os.path.join(dir_path, '.replied')
+				replied = open(file_path, 'a')
 				replied.write(comment.id + '\n')
 				replied.close()
 				print('Successfully replied.\n')
@@ -121,8 +125,10 @@ def generate_meme(generator, meme_type, imgur_id, top, bottom):
 		if template is -1:
 			return None
 		
-		path = 'templates/' + get_meme_data(meme_type, 'template')
-		call(['ruby', 'captain.rb', path, top, bottom])
+		dir_path = os.path.dirname(__file__)
+		file_path = os.path.join(dir_path, 'captain.rb')
+		template_path = os.path.join(dir_path, 'templates', get_meme_data(meme_type, 'template')) 
+		call(['ruby', file_path, template_path, top, bottom])
 		if os.path.isfile('out.jpg'):
 			return 'out.jpg'
 		else:
@@ -155,7 +161,9 @@ def upload_from_url(url):
 def already_replied(comment):
 	"""Returns True if the bot has already replied to the comment, False otherwise."""
 
-	replied = open('.replied', 'r')
+	dir_path = os.path.dirname(__file__)
+	file_path = os.path.join(dir_path, '.replied')
+	replied = open(file_path, 'r')
 
 	line = replied.readline()
 	while (len(line) > 0):
@@ -179,7 +187,9 @@ def patient_reply(comment, body):
 
 def get_meme_data(meme_type, data_type):
 	"""For a given meme type, tries to grab the indicated data from its XML node."""
-	tree = etree.parse('memes.xml')
+	dir_path = os.path.dirname(__file__)
+	file_path = os.path.join(dir_path, 'memes.xml')
+	tree = etree.parse(file_path)
 	root = tree.getroot()
 	
 	for elem in root.xpath('//name'):
